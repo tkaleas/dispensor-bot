@@ -1,3 +1,5 @@
-node_modules
+node_modules/*
+#Manually Tracking Venmo Library Git Submodule (Until latest is published to NPM)
+!node_modules/venmo
 .DS_Store*
 .hubot_history

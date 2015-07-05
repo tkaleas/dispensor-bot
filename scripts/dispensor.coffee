@@ -8,7 +8,7 @@
 #   LIST_OF_ENV_VARS_TO_SET
 #
 # Commands:
-#   hubot add <quantity> of <snack name> to the snacklist
+#   hubot add <quantity> ($)<cost> (each) <snack name> to the snacklist
 #   hubot remove <snack name> from (snack|grocery)list
 #   hubot clear (snack|grocery|consumer)list
 #   hubot register me as (venmo|email) <venmo ID or email address>
@@ -22,6 +22,8 @@
 
 #Clear Snacklist
 SnackManager = require("./snackmanager")
+Venmo = require("venmo")
+
 
 module.exports = (robot) ->
   retrieveSnackManager = () ->
@@ -36,12 +38,24 @@ module.exports = (robot) ->
   sm = retrieveSnackManager()
   saveSnackManager(sm)
 
+  #Venmo
+  venmo_error = new Error("Must supply a private Venmo API Key as environment variable VENMO_API_KEY. Correct Usage: \'export VENMO_API_KEY=YOUR_KEY mocha test/*.js\'")
+  throw venmo_error if !(process.env.VENMO_API_KEY?)
+  venmo = new Venmo(process.env.VENMO_API_KEY)
+
   #Add Snacks
-  robot.respond  /add +?(\d+(\.\d{1,2})*) +?of +?(\w*) +?to +?the +?snacklist *$/i, (res) ->
+  robot.respond  /add +?(\d+(\.\d{1,2})*) +?\$?(\d+(\.\d{1,2})*) +?(each)? *?(\w*) +?to +?the +?snacklist *$/i, (res) ->
     quantity = res.match[1]
-    snackName = res.match[2]
+    cost = res.match[3]
+    each = res.match[5]
+    snackName = res.match[6]
     snackmanager = retrieveSnackManager();
+    if(each)
+      snackmanager.addSnacks(snackName, quantity, null, cost);
+    else
+      snackmanager.addSnacks(snackName, quantity, cost, null);
     saveSnackManager(snackmanager)
+    res.send "Dispensor added #{quantity} of #{snackName} to the snacklist."
 
   #Add Consumer
   robot.respond  /register me as (venmo|email) +?(\S+)*$/i, (res) ->
@@ -55,6 +69,7 @@ module.exports = (robot) ->
       else return
     snackmanager.addConsumer(userName,email,venmoID)
     saveSnackManager(snackmanager)
+    res.send "Dispensor has added \'#{userName}\' to the consumer list."
 
   #Clear Snack or Grocery List
   robot.respond  /clear +?(snack|grocery|consumer)list *$/i, (res) ->
@@ -66,7 +81,7 @@ module.exports = (robot) ->
       when "consumer" then snackmanager.groceryList = []
       else return
     saveSnackManager(snackmanager)
-    res.send "Cleared the ${listType}list"
+    res.send "Cleared the ${listType}list."
 
   #Remove Snack
   robot.respond /remove +?(\w*) +?from +?(snack|grocery)list *$/i, (res) ->
@@ -78,13 +93,13 @@ module.exports = (robot) ->
     res.send "Removed #{snackName} from the ${listType}list"
 
   #Eat Snack
-  robot.respond /eat +?(\d) +?(\w*) *$/i, (res) ->
-    snackName = res.match[1]
-    listType = res.match[2]
+  robot.respond /dispense +?(\d)? *?(of)? *?(\w*) *$/i, (res) ->
+    quantity = if res.match[1]? then res.match[1] else 1
+    snackName = res.match[3]
     snackmanager = retrieveSnackManager();
-    snackmanager.removeSnack(snackName,listType,-1)
+    snackmanager.eatSnacks(snackName,quantity,-1)
+    res.send "Eating #{snackName}. Venmo charge has been sent to username."
     saveSnackManager(snackmanager)
-    res.send "Eating #{listType} from the ${listType}list"
 
   #Print Snacklist
   robot.respond  /print +?(snack|grocery|consumer)list *$/i, (res) ->

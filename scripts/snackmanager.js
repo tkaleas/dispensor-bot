@@ -3,8 +3,6 @@
 */
 
 var fs = require('fs');
-//var venmo = require('venmo');
-
 /**
 * Module exports.
 */
@@ -59,25 +57,27 @@ SnackManager.prototype.addSnacks = function(snackName, quantity, totalCost, cost
   }
 }
 
-SnackManager.prototype.eatSnacks = function(userName, snackName, quantity) {
+SnackManager.prototype.eatSnacks = function(snackName, quantity, callback) {
   var index = getNames(this.snackList).indexOf(snackName);
   if(index >= 0){
     var oldSnack = this.snackList[index];
-    this.snackList[this.snackList.indexOf(snackName)] = { name: snackName, cost: price, quantity: oldSnack.quantity-quantity};
+    this.snackList[index].quantity = oldSnack.quantity-quantity;
     //Remove Snacks From List If We Are Out
     if(this.snackList[index].quantity <= 0){
       groceryList.snackList.push(this.snackList[index]);
       this.snackList.splice(index,1);
       console.log("Out of Snack: "+snackName+"\nAdding to Grocery List");
+      callback(null, oldSnack.quantity*oldSnack.price);
     } else {
-      //Venmo Charge User
+      //Callback With Amount To Charge
+      callback(null, quantity*oldSnack.price);
     }
   } else {
-    console.log("No Snacks Found");
+    callback("No snacks of snacktype were found.");
   }
 }
 
-SnackManager.prototype.removeSnack = function(snackName,listType,quantity) {
+SnackManager.prototype.removeSnack = function(snackName, listType, quantity) {
   if(listType == "grocery"){
     var i = getNames(this.groceryList).indexOf(snackName);
     if(i >= 0){

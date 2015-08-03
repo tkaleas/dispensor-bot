@@ -25,7 +25,7 @@ function SnackManager () {
   this.consumerList = [];
 }
 
-SnackManager.prototype.addConsumer = function(name, email, venmoID){
+SnackManager.prototype.addConsumer = function(name, email, phone, venmoID){
   var index = getNames(this.consumerList).indexOf(name);
   if(index >=0){
     console.log("User Already Added To Consumer List. Updating ID's If Not Null");
@@ -33,8 +33,10 @@ SnackManager.prototype.addConsumer = function(name, email, venmoID){
       this.consumerList[index].email = email;
     if(venmoID)
       this.consumerList[index].venmoID = venmoID;
+    if(phone)
+      this.consumerList[index].phone = phone;
   } else {
-    this.consumerList.push({name:name, email: email, venmoID: venmoID});
+    this.consumerList.push({name:name, email: email, venmoID: venmoID, phone: phone});
   }
 }
 
@@ -44,16 +46,20 @@ SnackManager.prototype.addSnacks = function(snackName, quantity, totalCost, cost
   //Switch between totalcost or cost per snack being spefified, cost per snack takes precedence
   if(arguments.length > 3){
     price = costPerSnack;
-  } else{
+  } else {
     price = totalCost/quantity;
   }
+  console.log(price);
   //Snack Object
   var index = getNames(this.snackList).indexOf(snackName);
   if(index >= 0){
     var oldSnack = this.snackList[index];
     this.snackList[index] = { name: snackName, cost: price, quantity: oldSnack.quantity+quantity};
+    return this.snackList[index];
   } else {
-    this.snackList.push({ name: snackName, cost: price, quantity: quantity});
+    var newSnack = { name: snackName, cost: price, quantity: quantity}
+    this.snackList.push(newSnack);
+    return newSnack;
   }
 }
 
@@ -104,6 +110,15 @@ SnackManager.prototype.removeSnack = function(snackName, listType, quantity) {
 
 SnackManager.prototype.getSnackData = function(){
   return { snackList: this.snackList, groceryList: this.groceryList, consumerList: this.consumerList};
+}
+
+SnackManager.prototype.getVenmoUser = function(name){
+  var index = getNames(this.consumerList).indexOf(name);
+  if(index >=0){
+    return {user_id: this.consumerList[index].venmoID, email: this.consumerList[index].email, phone: this.consumerList[index].phone};
+  } else {
+    console.log("Venmo User for \'"+name+"\' Not Found");
+  }
 }
 
 //Load snackLists

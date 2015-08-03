@@ -5,6 +5,10 @@
   "author": "Terry Kaleas <terry.kaleas@gmail.com>",
   "description": "A snackbot for Grid.",
   "dependencies": {
+    "body-parser": "^1.13.3",
+    "dispatch": "^1.0.0",
+    "express": "^4.13.1",
+    "express-session": "^1.11.3",
     "hubot": "^2.13.2",
     "hubot-auth": "^1.2.0",
     "hubot-diagnostics": "0.0.1",
@@ -18,7 +22,13 @@
     "hubot-rules": "^0.1.1",
     "hubot-scripts": "^2.16.1",
     "hubot-shipit": "^0.2.0",
-    "hubot-slack": "^3.3.0"
+    "hubot-slack": "^3.3.0",
+    "passport": "^0.2.2",
+    "passport-oauth2-refresh": "^0.4.0",
+    "passport-venmo": "0.0.1",
+    "redis": "^0.12.1",
+    "sprintf-js": "^1.0.2",
+    "superagent": "^1.2.0"
   },
   "engines": {
     "node": "0.10.x"

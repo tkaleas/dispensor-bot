@@ -3,6 +3,7 @@
 */
 
 var fs = require('fs');
+var _ = require('underscore')
 /**
 * Module exports.
 */
@@ -70,16 +71,16 @@ SnackManager.prototype.eatSnacks = function(snackName, quantity, callback) {
     this.snackList[index].quantity = oldSnack.quantity-quantity;
     //Remove Snacks From List If We Are Out
     if(this.snackList[index].quantity <= 0){
-      groceryList.snackList.push(this.snackList[index]);
+      this.groceryList.push(_.extend(oldSnack, {quantity:0}));
       this.snackList.splice(index,1);
-      console.log("Out of Snack: "+snackName+"\nAdding to Grocery List");
+      console.log("Out of Snack: " + snackName + "\nAdding to Grocery List");
       callback(null, oldSnack.quantity*oldSnack.price);
     } else {
       //Callback With Amount To Charge
       callback(null, quantity*oldSnack.price);
     }
   } else {
-    callback("No snacks of snacktype were found.");
+    callback("No snacks of the snack type were found.");
   }
 }
 

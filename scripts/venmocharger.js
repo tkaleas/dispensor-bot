@@ -16,6 +16,7 @@ var Venmo = require('venmo');
 
 var VenmoStrategy = require('passport-venmo').Strategy;
 
+//TODO: Switch To Using Environment Variables So Real Values Don't Show Up in Github
 var DISPENSOR_PASSKEY = "binary";
 var Venmo_CLIENT_ID = "2724";
 var Venmo_CLIENT_SECRET = "P6XkCF8bstQzvarfYuCraA2kCWcxxMDZ";

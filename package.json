@@ -28,7 +28,8 @@
     "passport-venmo": "0.0.1",
     "redis": "^0.12.1",
     "sprintf-js": "^1.0.2",
-    "superagent": "^1.2.0"
+    "superagent": "^1.2.0",
+    "underscore": "^1.8.3"
   },
   "engines": {
     "node": "0.10.x"

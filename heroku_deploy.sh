@@ -1,22 +1,21 @@
 #!/bin/bash
-APP_NAME=${YOUR APP NAME HERE}
-SLACK_TOKEN=${YOUR SLACK TOKEN HERE}
+APP_NAME="dispensor"
+SLACK_TOKEN="YOUR SLACK TOKEN"
 
 #Venmo and Passcodes
-DISPENSOR_PASSKEY=${YOUR SPECIAL KEY}
-VENMO_CLIENT_ID=${YOUR VENMO CLIENT ID}
-VENMO_CLIENT_SECRET=${YOUR VENMO CLIENT SECRET}
+DISPENSOR_PASSKEY="your_password"
+VENMO_CLIENT_ID="5555"
+VENMO_CLIENT_SECRET="YOUR CLIENT SECRET"
 
 HEROKU_URL="http://$APP_NAME.herokuapp.com"
 
 #Update and login to Heroku
 heroku auth:login
-
 #APP CREATION - only if app doesnt exist already
-if [ -z `heroku list | grep $APP_NAME` ]
-  then
+if [ -z `heroku list | grep $APP_NAME` ]; then
     heroku create $APP_NAME
     heroku addons:add rediscloud
+fi
 
 #Configure Environment
 heroku config:set HUBOT_SLACK_TOKEN=$SLACK_TOKEN

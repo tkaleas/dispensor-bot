@@ -22,7 +22,12 @@ var Venmo_CLIENT_ID = process.env.VENMO_CLIENT_ID;
 var Venmo_CLIENT_SECRET = process.env.VENMO_CLIENT_SECRET;
 
 //Redis Client
-var rclient = redis.createClient();
+var rclient;
+if(process.env.REDISTOGO_URL)
+  rclient = redis.createClient(9394, process.env.REDISTOGO_URL, {});
+else
+  rclient = redis.createClient();
+
 rclient.on('connect', function() {
     console.log('Redis Connected...');
 });

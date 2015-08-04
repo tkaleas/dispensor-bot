@@ -111,15 +111,15 @@ module.exports = (robot) ->
         #update accesstoken if needed
         VenmoCharger.getVenmoChargeAccount (user) ->
           venmo.updateToken user.AccessToken
-          console.log("Venmo Charge User Is: " + JSON.stringify(user))
+          #console.log("Venmo Charge User Is: " + JSON.stringify(user))
           venmo.chargeUser venmoQuery, "Charge for Snack: #{snackName}", price, (error, resp) ->
             if error
               #Respond With Venmo Charge Error
               res.send "Unable to Charge \`#{userName}\` via Venmo."
             else
               saveSnackManager(snackmanager)
-              console.log(error)
-              console.log(resp)
+              #console.log(error)
+              #console.log(resp)
               res.send "Eating #{snackName}. Venmo charge has been sent to #{userName}."
 
   # T Snacklist

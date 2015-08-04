@@ -17,9 +17,9 @@ var Venmo = require('venmo');
 var VenmoStrategy = require('passport-venmo').Strategy;
 
 //TODO: Switch To Using Environment Variables So Real Values Don't Show Up in Github
-var DISPENSOR_PASSKEY = "binary";
-var Venmo_CLIENT_ID = "2724";
-var Venmo_CLIENT_SECRET = "P6XkCF8bstQzvarfYuCraA2kCWcxxMDZ";
+var DISPENSOR_PASSKEY = process.env.DISPENSOR_PASSKEY;
+var Venmo_CLIENT_ID = process.env.VENMO_CLIENT_ID;
+var Venmo_CLIENT_SECRET = process.env.VENMO_CLIENT_SECRET;
 
 //Redis Client
 var rclient = redis.createClient();
@@ -64,7 +64,7 @@ var venmoStrategy = new VenmoStrategy({
     rclient.set('venmoCharger', JSON.stringify(user), function (err, reply) {
       if (err) throw err;
       console.log('Venmo Charge Account Saved! User is: ');
-      console.log(user);
+      //console.log(user);
       done(err, user);
     });
   }
@@ -105,11 +105,8 @@ app.post(  '/auth/venmo',
 app.get(  '/users/venmo',
           function(req, res) {
             getVenmoChargeAccount( function(user) {
-                        //console.log(user);
                         var venmo = new Venmo(user.AccessToken);
-                        console.log("ACCESS TOKEN: " + user.access_token);
                         venmo.getCurrentUser(function(err,data){
-                          console.log(data);
                           var condensed = { username: data.user.username,
                                             displayname: data.user.display_name,
                                             email: data.user.email
@@ -140,7 +137,6 @@ app.get( '/auth/venmo/refresh',
 function checkPassKey(req,res,next) {
   var passKey = req.body.pwd;
   if(passKeyCheck(passKey)){
-    console.log(passKey);
     next();
   } else {
     console.log("Incorrect Passkey Was Input");

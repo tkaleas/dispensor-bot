@@ -49,7 +49,7 @@ app.use(bodyParser.urlencoded({extended:true}));
 //Serve Static Web For Web App
 app.use('/', express.static(path.resolve(__dirname,'../public')));
 
-console.log(path.resolve(__dirname,'../public'))
+//console.log(path.resolve(__dirname,'../public'))
 var venmoStrategy = new VenmoStrategy({
     clientID: Venmo_CLIENT_ID,
     clientSecret: Venmo_CLIENT_SECRET,

@@ -26,7 +26,7 @@ var Venmo_CLIENT_SECRET = process.env.VENMO_CLIENT_SECRET;
 var rclient;
 if(process.env.REDISTOGO_URL){
   info   = url.parse(process.env.REDISTOGO_URL, true);
-  rclient = redis.createClient(info.port, info.hostname);
+  rclient = redis.createClient(info.port, info.hostname, {no_ready_check: true});
 }
 else {
   rclient = redis.createClient();

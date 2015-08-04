@@ -13,6 +13,7 @@ var session = require('express-session');
 var refresh = require('passport-oauth2-refresh');
 var bodyParser = require('body-parser');
 var Venmo = require('venmo');
+var url = require('url');
 
 var VenmoStrategy = require('passport-venmo').Strategy;
 
@@ -23,10 +24,13 @@ var Venmo_CLIENT_SECRET = process.env.VENMO_CLIENT_SECRET;
 
 //Redis Client
 var rclient;
-if(process.env.REDISTOGO_URL)
-  rclient = redis.createClient(9394, process.env.REDISTOGO_URL, {});
-else
+if(process.env.REDISTOGO_URL){
+  info   = Url.parse(process.env.REDISTOGO_URL, true);
+  rclient = redis.createClient(info.port, info.hostname);
+}
+else {
   rclient = redis.createClient();
+}
 
 rclient.on('connect', function() {
     console.log('Redis Connected...');

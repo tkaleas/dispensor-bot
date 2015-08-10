@@ -18,151 +18,171 @@ var url = require('url');
 var VenmoStrategy = require('passport-venmo').Strategy;
 
 //TODO: Switch To Using Environment Variables So Real Values Don't Show Up in Github
-var DISPENSOR_PASSKEY = process.env.DISPENSOR_PASSKEY;
-var Venmo_CLIENT_ID = process.env.VENMO_CLIENT_ID;
-var Venmo_CLIENT_SECRET = process.env.VENMO_CLIENT_SECRET;
+module.exports = VenmoCharger;
 
-//Redis Client
-var rclient;
-if(process.env.REDISTOGO_URL){
-  info   = url.parse(process.env.REDISTOGO_URL, true);
-  rclient = redis.createClient(info.port, info.hostname, {no_ready_check: true});
-}
-else {
-  rclient = redis.createClient();
-}
+function VenmoCharger(robot) {
+  var DISPENSOR_PASSKEY = process.env.DISPENSOR_PASSKEY;
+  var Venmo_CLIENT_ID = process.env.VENMO_CLIENT_ID;
+  var Venmo_CLIENT_SECRET = process.env.VENMO_CLIENT_SECRET;
+  var me = this;  //for scoped referenced back this this in nested functions
 
-rclient.on('connect', function() {
-    console.log('Redis Connected...');
-});
-
-var redisSessionStore = rclient.redisSessionStore;
-var sess = {
-  store: redisSessionStore,
-  secret: 'keyboard cat',
-  resave: true,
-  saveUninitialized: false,
-  cookie: {
-    expires: false,
+  //Redis Client
+  if(process.env.REDISTOGO_URL){
+    info   = url.parse(process.env.REDISTOGO_URL, true);
+    this.rclient = redis.createClient(info.port, info.hostname, {no_ready_check: true});
   }
-};
-
-app.set('port', process.env.PORT || 5000);
-app.set('view engine', 'html');
-app.use(session(sess));
-app.use(passport.initialize());
-app.use(passport.session());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended:true}));
-
-//Serve Static Web For Web App
-app.use('/', express.static(path.resolve(__dirname,'../public')));
-
-//console.log(path.resolve(__dirname,'../public'))
-var venmoStrategy = new VenmoStrategy({
-    clientID: Venmo_CLIENT_ID,
-    clientSecret: Venmo_CLIENT_SECRET,
-    callbackURL: "http://localhost:8080/auth/venmo/callback"
-  },
-
-  function(accessToken, refreshToken, profile, done) {
-    console.log("Profile ID :" + profile.id);
-    console.log("Access Token: " + accessToken);
-    console.log("Refresh Token: " + refreshToken);
-    var user = { VenmoId: profile.id, AccessToken:accessToken, RefreshToken:refreshToken};
-    rclient.set('venmoCharger', JSON.stringify(user), function (err, reply) {
-      if (err) throw err;
-      console.log('Venmo Charge Account Saved! User is: ');
-      //console.log(user);
-      done(err, user);
-    });
+  else {
+    this.rclient = redis.createClient();
   }
-);
 
-passport.use(venmoStrategy);
-refresh.use(venmoStrategy);
+  this.rclient.on('connect', function() {
+      console.log('Venmo Charger Redis Connected...');
+  });
 
-passport.serializeUser(function(user, done) {
-    console.log('passport serializing...' + user.VenmoId);
-    done(null, user.VenmoId);
-});
+  var redisSessionStore = this.rclient.redisSessionStore;
+  var sess = {
+    store: redisSessionStore,
+    secret: 'keyboard cat',
+    resave: true,
+    saveUninitialized: false,
+    cookie: {
+      expires: false,
+    }
+  };
 
-passport.deserializeUser(function(id, done) {
-    rclient.get('venmoCharger', function(err, user) {
+  //Hijack the robots express server and use it as our own
+  //roubot.router.set('port', process.env.PORT || 5000);
+  robot.router.set('view engine', 'html');
+  robot.router.use(session(sess));
+  robot.router.use(passport.initialize());
+  robot.router.use(passport.session());
+  robot.router.use(bodyParser.json());
+  robot.router.use(bodyParser.urlencoded({extended:true}));
+
+  //Serve Static Web For Web App
+  robot.router.use('/', express.static(path.resolve(__dirname,'../public')));
+
+  //console.log(path.resolve(__dirname,'../public'))
+  var venmoStrategy = new VenmoStrategy({
+      clientID: Venmo_CLIENT_ID,
+      clientSecret: Venmo_CLIENT_SECRET,
+      callbackURL: "http://localhost:8080/auth/venmo/callback"
+    },
+
+    function(accessToken, refreshToken, profile, done) {
+      console.log("Profile ID :" + profile.id);
+      console.log("Access Token: " + accessToken);
+      console.log("Refresh Token: " + refreshToken);
+      var user = { VenmoId: profile.id, AccessToken:accessToken, RefreshToken:refreshToken};
+      me.rclient.set('venmoCharger', JSON.stringify(user), function (err, reply) {
         if (err) throw err;
-        console.log('passport deserializing...'+JSON.parse(user).VenmoId);
-        done(err, JSON.parse(user));
-    });
-});
+        console.log('Venmo Charge Account Saved! User is: ');
+        //console.log(user);
+        done(err, user);
+      });
+    }
+  );
 
-//Constants
-var oathURI = "https://api.venmo.com/v1/oauth/authorize";
-var redirectURI = "http://localhost:8080/redirectTo";
-var accessTokenURI = "https://api.venmo.com/v1/oauth/access_token";
+  passport.use(venmoStrategy);
+  refresh.use(venmoStrategy);
 
-//TODO: Come Up With Some Better User Flow Here For Updating the Charge Account
-app.post(  '/auth/venmo',
-          checkPassKey,
-          passport.authenticate('venmo', {
-            scope: ['make_payments', 'access_feed', 'access_profile', 'access_email', 'access_phone', 'access_balance', 'access_friends'],
-            failureRedirect: '/'
-          }), function(req, res) {
+  passport.serializeUser(function(user, done) {
+      console.log('passport serializing...' + user.VenmoId);
+      done(null, user.VenmoId);
+  });
+
+  passport.deserializeUser(function(id, done) {
+      this.rclient.get('venmoCharger', function(err, user) {
+          if (err) throw err;
+          console.log('passport deserializing...'+JSON.parse(user).VenmoId);
+          done(err, JSON.parse(user));
+      });
+  });
+
+  //Constants
+  var oathURI = "https://api.venmo.com/v1/oauth/authorize";
+  var redirectURI = "http://localhost:8080/redirectTo";
+  var accessTokenURI = "https://api.venmo.com/v1/oauth/access_token";
+
+
+  this.passKeyCheck =  function (passkey){
+              if(passkey === DISPENSOR_PASSKEY)
+                return true;
+              else
+                return false;
+            }
+
+  this.checkPassKey = function (req,res,next) {
+              var passKey = req.body.pwd;
+              if(this.passKeyCheck(passKey)){
+                next();
+              } else {
+                console.log("Incorrect Passkey Was Input");
                 res.redirect('/');
               }
-        );
+            }
 
-app.get(  '/users/venmo',
-          function(req, res) {
-            getVenmoChargeAccount( function(user) {
-                        var venmo = new Venmo(user.AccessToken);
-                        venmo.getCurrentUser(function(err,data){
-                          var condensed = { username: data.user.username,
-                                            displayname: data.user.display_name,
-                                            email: data.user.email
-                                          };
-                          res.json(condensed);
-                        });
-                    });
-          });
+  //TODO: Come Up With Some Better User Flow Here For Updating the Charge Account
+  robot.router.post(  '/auth/venmo',
+            this.checkPassKey,
+            passport.authenticate('venmo', {
+              scope: ['make_payments', 'access_feed', 'access_profile', 'access_email', 'access_phone', 'access_balance', 'access_friends'],
+              failureRedirect: '/'
+            }), function(req, res) {
+                  res.redirect('/');
+                }
+          );
 
-app.get( '/auth/venmo/callback',
-          passport.authenticate('venmo', {
-            failureRedirect: '/'
-          }), function(req, res) {
-            //Nothing If we got Here (Maybe Render The Client Information if Its Been Inputed Properly?)
-            //res.json({user: req.user ? JSON.stringify(req.user) : 'null'});
-            res.redirect('/');
-          }
-        );
+  robot.router.get(  '/users/venmo',
+            function(req, res) {
+              me.getVenmoChargeAccount( function(user) {
+                          if(user) {
+                            var venmo = new Venmo(user.AccessToken);
+                            venmo.getCurrentUser(function(err,data){
+                              var condensed = { username: data.user.username,
+                                                displayname: data.user.display_name,
+                                                email: data.user.email
+                                              };
+                              res.json(condensed);
+                            });
+                          }
+                          else{
+                            console.log("No Venmo User Found.")
+                          }
+                      });
+            });
 
-app.get( '/auth/venmo/refresh',
-          passport.authenticate('venmo', {
-            failureRedirect: '/'
-          }), function(req, res) {
-            res.json({user: req.user ? JSON.stringify(req.user) : 'null'});
-          }
-        );
+  robot.router.get( '/auth/venmo/callback',
+            passport.authenticate('venmo', {
+              failureRedirect: '/'
+            }), function(req, res) {
+              //Nothing If we got Here (Maybe Render The Client Information if Its Been Inputed Properly?)
+              //res.json({user: req.user ? JSON.stringify(req.user) : 'null'});
+              res.redirect('/');
+            }
+          );
 
-function checkPassKey(req,res,next) {
-  var passKey = req.body.pwd;
-  if(passKeyCheck(passKey)){
-    next();
-  } else {
-    console.log("Incorrect Passkey Was Input");
-    res.redirect('/');
-  }
+  robot.router.get( '/auth/venmo/refresh',
+            passport.authenticate('venmo', {
+              failureRedirect: '/'
+            }), function(req, res) {
+              res.json({user: req.user ? JSON.stringify(req.user) : 'null'});
+            }
+          );
 }
+// VenmoCharger.prototype.checkPassKey = function (req,res,next) {
+//   var passKey = req.body.pwd;
+//   if(this.passKeyCheck(passKey)){
+//     next();
+//   } else {
+//     console.log("Incorrect Passkey Was Input");
+//     res.redirect('/');
+//   }
+// }
 
-function passKeyCheck(passkey){
-  if(passkey === DISPENSOR_PASSKEY)
-    return true;
-  else
-    return false;
-}
-
-function ensureRefreshedToken(req, res, next) {
+VenmoCharger.prototype.ensureRefreshedToken = function (req, res, next) {
    //Get Old Access Token
-   rclient.get('venmoCharger', function(err, user) {
+   this.rclient.get('venmoCharger', function(err, user) {
         if (err) throw err;
         user = JSON.parse(user);
         var oldRefreshToken = user.RefreshToken;
@@ -170,7 +190,7 @@ function ensureRefreshedToken(req, res, next) {
           //Store New Access Token
           if(refreshToken){
             var newUser = _.extend(user,{AccessToken:accessToken, RefreshToken:refreshToken});
-              rclient.set('venmoCharger', JSON.stringify(newUser), function (err, reply) {
+              this.rclient.set('venmoCharger', JSON.stringify(newUser), function (err, reply) {
               if (err) throw err;
               console.log('Venmo Charge Account Refreshed! User is: ');
               console.log(user);
@@ -184,20 +204,20 @@ function ensureRefreshedToken(req, res, next) {
     });
 }
 
-//Launch the express server
-var server = app.listen(app.get('port'), function() {
-  console.log('Dispensor Venmo server listening on port ' + server.address().port);
-});
+// //Launch the express server
+// var server = app.listen(app.get('port'), function() {
+//   console.log('Dispensor Venmo server listening on port ' + server.address().port);
+// });
 
-getVenmoChargeAccount = function(callback) {
-  rclient.get('venmoCharger', function(err, user) {
+VenmoCharger.prototype.getVenmoChargeAccount = function(callback) {
+  this.rclient.get('venmoCharger', function(err, user) {
     if (err) throw err;
     //console.log(JSON.parse(user));
     callback(JSON.parse(user));
   });
 };
 
-//Module Exports -> Export Current Venmo Charge User
-module.exports = {
-  getVenmoChargeAccount: getVenmoChargeAccount
-};
+// //Module Exports -> Export Current Venmo Charge User
+// module.exports = {
+//   getVenmoChargeAccount: getVenmoChargeAccount
+// };

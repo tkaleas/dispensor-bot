@@ -28,7 +28,6 @@ sprintf = require("sprintf-js").sprintf
 currency = (amount) ->
   sprintf("$%.2f",amount)
 
-
 module.exports = (robot) ->
   retrieveSnackManager = () ->
     snackmanager = new SnackManager()
@@ -47,6 +46,7 @@ module.exports = (robot) ->
   #venmo_error = new Error("Must supply a private Venmo API Key as environment variable VENMO_API_KEY. Correct Usage: \'export VENMO_API_KEY=YOUR_KEY mocha test/*.js\'")
   # throw venmo_error if !(process.env.VENMO_API_KEY?)
   venmo = new Venmo(process.env.VENMO_API_KEY);
+  venmoCharger = new VenmoCharger(robot);
 
   #Add Snacks
   robot.respond  /add +?(\d+(\.\d{1,2})*) +?\$?(\d+(\.\d{1,2})*) +?(each)? *?(\w*) +?to +?the +?snacklist *$/i, (res) ->
@@ -109,20 +109,20 @@ module.exports = (robot) ->
           res.send "No Venmo User Found For: " + userName
           return
         #update accesstoken if needed
-        VenmoCharger.getVenmoChargeAccount (user) ->
+        venmoCharger.getVenmoChargeAccount (user) ->
           venmo.updateToken user.AccessToken
-          #console.log("Venmo Charge User Is: " + JSON.stringify(user))
+          #console.log "Venmo Charge User Is: " + JSON.stringify(user)
           venmo.chargeUser venmoQuery, "Charge for Snack: #{snackName}", price, (error, resp) ->
             if error
               #Respond With Venmo Charge Error
               res.send "Unable to Charge \`#{userName}\` via Venmo."
             else
               saveSnackManager(snackmanager)
-              #console.log(error)
-              #console.log(resp)
+              #console.log error
+              #console.log resp
               res.send "Eating #{snackName}. Venmo charge has been sent to #{userName}."
 
-  # T Snacklist
+  #Snacklist
   robot.respond  /print +?(snack|grocery|consumer)list *$/i, (res) ->
     listType = res.match[1]
     snackmanager = retrieveSnackManager()

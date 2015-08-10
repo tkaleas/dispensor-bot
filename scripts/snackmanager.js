@@ -50,7 +50,6 @@ SnackManager.prototype.addSnacks = function(snackName, quantity, totalCost, cost
   } else {
     price = totalCost/quantity;
   }
-  console.log(price);
   //Snack Object
   var index = getNames(this.snackList).indexOf(snackName);
   if(index >= 0){
@@ -68,16 +67,17 @@ SnackManager.prototype.eatSnacks = function(snackName, quantity, callback) {
   var index = getNames(this.snackList).indexOf(snackName);
   if(index >= 0){
     var oldSnack = this.snackList[index];
+    var oldSnackQuant = oldSnack.quantity;
     this.snackList[index].quantity = oldSnack.quantity-quantity;
     //Remove Snacks From List If We Are Out
     if(this.snackList[index].quantity <= 0){
       this.groceryList.push(_.extend(oldSnack, {quantity:0}));
       this.snackList.splice(index,1);
       console.log("Out of Snack: " + snackName + "\nAdding to Grocery List");
-      callback(null, oldSnack.quantity*oldSnack.price);
+      callback(null, oldSnackQuant*oldSnack.cost);
     } else {
       //Callback With Amount To Charge
-      callback(null, quantity*oldSnack.price);
+      callback(null, quantity*oldSnack.cost);
     }
   } else {
     callback("No snacks of the snack type were found.");

@@ -63,10 +63,11 @@ function VenmoCharger(robot) {
   robot.router.use('/', express.static(path.resolve(__dirname,'../public')));
 
   //console.log(path.resolve(__dirname,'../public'))
+  var baseCallbackUrl = process.env.HEROKU_URL | "http://localhost:8080"
   var venmoStrategy = new VenmoStrategy({
       clientID: Venmo_CLIENT_ID,
       clientSecret: Venmo_CLIENT_SECRET,
-      callbackURL: "http://localhost:8080/auth/venmo/callback"
+      callbackURL: baseCallbackUrl + "/auth/venmo/callback"
     },
 
     function(accessToken, refreshToken, profile, done) {

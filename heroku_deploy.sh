@@ -9,8 +9,17 @@ VENMO_CLIENT_SECRET="YOUR CLIENT SECRET"
 
 HEROKU_URL="http://$APP_NAME.herokuapp.com"
 
+#first update from develop
+git checkout master
+git pull origin master
+git merge $1
+git push origin master
+
 #Update and login to Heroku
-heroku auth:login
+if [ `heroku auth` == "not logged in" ]; then
+  heroku auth:login
+fi
+
 #APP CREATION - only if app doesnt exist already
 if [ -z `heroku list | grep $APP_NAME` ]; then
     heroku create $APP_NAME

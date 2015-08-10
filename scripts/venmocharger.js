@@ -63,7 +63,7 @@ function VenmoCharger(robot) {
   robot.router.use('/', express.static(path.resolve(__dirname,'../public')));
 
   //console.log(path.resolve(__dirname,'../public'))
-  var baseCallbackUrl = process.env.URL | "http://localhost:8080";
+  var baseCallbackUrl = process.env.VENMO_CALLBACK_URL | "http://localhost:8080";
   console.log("BASE CALLBACK:" + baseCallbackUrl);
   var venmoStrategy = new VenmoStrategy({
       clientID: Venmo_CLIENT_ID,

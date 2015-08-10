@@ -6,8 +6,9 @@ SLACK_TOKEN="YOUR SLACK TOKEN"
 DISPENSOR_PASSKEY="your_password"
 VENMO_CLIENT_ID="5555"
 VENMO_CLIENT_SECRET="YOUR CLIENT SECRET"
+VENMO_CALLBACK_URL="https://$APP_NAME.herokuapp.com"
 
-HEROKU_URL="http://$APP_NAME.herokuapp.com"
+HEROKU_URL="https://$APP_NAME.herokuapp.com"
 
 #first update from develop
 git checkout master
@@ -32,6 +33,7 @@ heroku config:set HEROKU_URL=$HEROKU_URL
 heroku config:set DISPENSOR_PASSKEY=$DISPENSOR_PASSKEY
 heroku config:set VENMO_CLIENT_ID=$VENMO_CLIENT_ID
 heroku config:set VENMO_CLIENT_SECRET=$VENMO_CLIENT_SECRET
+heroku config:set VENMO_CALLBACK_URL=$VENMO_CALLBACK_URL
 
 #Make Sure We've Updated Heroku to Latest Master
 git push heroku master

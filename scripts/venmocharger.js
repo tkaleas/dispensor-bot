@@ -64,7 +64,7 @@ function VenmoCharger(robot) {
 
   //console.log(path.resolve(__dirname,'../public'))
   var baseCallbackUrl = process.env.HEROKU_URL | "http://localhost:8080";
-  console.log(baseCallbackUrl);
+  console.log("BASE CALLBACK:"+baseCallbackUrl);
   var venmoStrategy = new VenmoStrategy({
       clientID: Venmo_CLIENT_ID,
       clientSecret: Venmo_CLIENT_SECRET,

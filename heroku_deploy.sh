@@ -35,3 +35,4 @@ heroku config:set VENMO_CLIENT_SECRET=$VENMO_CLIENT_SECRET
 
 #Make Sure We've Updated Heroku to Latest Master
 git push heroku master
+git checkout $1

@@ -11,6 +11,7 @@ VENMO_CALLBACK_URL="https://$APP_NAME.herokuapp.com"
 HEROKU_URL="https://$APP_NAME.herokuapp.com"
 
 #first update from develop
+git push
 git checkout master
 git pull origin master
 git merge $1

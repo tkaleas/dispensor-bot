@@ -27,9 +27,23 @@ function VenmoCharger(robot) {
   var me = this;  //for scoped referenced back this this in nested functions
 
   //Redis Client
-  if(process.env.REDISTOGO_URL){
+  if (process.env.REDISTOGO_URL) {
     info   = url.parse(process.env.REDISTOGO_URL, true);
-    this.rclient = redis.createClient(info.port, info.hostname, {no_ready_check: true});
+    if (info.auth) {
+      this.rclient = redis.createClient(info.port, info.hostname, {no_ready_check: true});
+    } else {
+      this.rclient = redis.createClient(info.port, info.hostname);
+    }
+    if (info.auth) {
+      this.rclient.auth(info.auth.split(":")[1], function (err) {
+        if (err) {
+          console.log("venmo-charger: Failed to authenticate to Redis");
+        }
+        else {
+          console.log("venmo-charger: Successfully authenticated to Redis");
+        }
+      });
+    }
   }
   else {
     this.rclient = redis.createClient();
